@@ -1,0 +1,55 @@
+import com.dmdev.task.ReleaseTask
+
+plugins {
+    id 'java'
+    id 'jacoco'
+    id 'custom-dmdev'
+}
+
+//apply plugin: com.dmdev.plugin.CustomPlugin
+
+group 'org.example'
+version '1.0.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(":database")
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+test.finalizedBy jacocoTestReport
+
+// добавляем property release
+ext {
+    release = true
+}
+
+// задача, наследующая DefaultTask
+// демонстрация работы кэша
+
+// громоздко и некрасиво, поэтому вынесем функционал в buildSrc
+//task makeRelease {
+//    inputs.property("release", project.release)
+//    // если файл не изменился, то не будем перезапускать задачу
+//    outputs.file("$rootDir/script.gradle")
+//
+//    doLast {
+//        println "release in progress..."
+//    }
+//}
+
+task makeRelease(type: ReleaseTask) {
+    // инициализация полей класса
+    release = project.release
+    releaseFile = new File("$rootDir/script.gradle")
+}
+
