@@ -1,0 +1,4 @@
+// необязательно, т.к. по умолчанию реализует java и groovy plugins
+plugins {
+    id 'groovy'
+}
