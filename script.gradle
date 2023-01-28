@@ -1,0 +1,148 @@
+println "configuration phase"
+println "gradle id: ${gradle.hashCode()}"
+// рутовый проект тот же, что и текущий
+println "root: ${rootProject.hashCode()}, ${project.hashCode()}, ${gradle.rootProject.hashCode()}"
+
+// для вариантов 1, 2 и 3 — под капотом создание task = new DefaultTask
+//task("hello")
+
+// Вариант 1
+//tasks.findByName("hello").description = "Hello task"
+//tasks.findByName("hello").group = "dmdev"
+
+// Вариант 2
+//hello.description = "Hello task"
+//hello.group = "dmdev"
+
+// Вариант 3
+//hello {
+//    println "configuration phase. Task hello."
+//    description = "Hello task"
+//    group = "dmdev"
+//}
+
+// Вариант 4 — наиболее предпочтительный
+//task("hello") {
+//    println "configuration phase. Task hello."
+//    description = "Hello task"
+//    group = "dmdev"
+//}
+
+// Groovy допускает не ставить круглые скобки у параметров
+//task "hello" {
+//    println "configuration phase. Task hello."
+//    description = "Hello task"
+//    group = "dmdev"
+//}
+
+/* Если параметр - это строка, которая используется как ключ для Map,
+ то можно не ставить двойные кавычки*/
+//task hello {
+//    println "configuration phase. Task hello."
+//    description = "Hello task"
+//    group = "dmdev"
+//}
+
+/* можно воспользоваться возможностью инициализации task при помощи Map,
+ в которой в качестве ключей будут имена полей класса DefaultTask
+ а в качестве значений этих ключей будут сами значения данных полей*/
+//def map = [description: "Hello task", group: "dmdev"]
+//task(map, "hello") {
+//    println "configuration phase. Task hello."
+//    println "task: $description, group: $group, actions: ${actions.size()}"
+//}
+
+// или то же самое, но более лаконично
+task hello(description: "Hello task", group: "dmdev", type: DefaultTask) {
+    println "configuration phase. Task hello."
+
+    // Actions
+    doLast {
+        println "execution phase, Action 1"
+    }
+    doFirst {
+        println "execution phase, Action 2"
+    }
+    doLast {
+        println "execution phase, Action 3"
+    }
+
+    println "task: $description, group: $group, actions: ${actions.size()}"
+    println "path task: $path"
+}
+
+task first {
+    doLast {
+        println "Task 1"
+    }
+}
+
+task second {
+    doLast {
+        println "Task 2"
+    }
+}
+
+task third {
+    doLast {
+        println "Task 3"
+    }
+}
+
+task fourth(group: "dmdev") {
+    doLast {
+        println "Task 4"
+    }
+}
+
+// 2 ---> 4
+// 1 ---> 2
+// 2 ...  3
+//fourth.dependsOn second
+//second.dependsOn first
+//second.finalizedBy third
+
+// Если задачи независимые друг от друга, то порядок вызова не гарантируется
+// для задания порядка независимых задач используются mustRunAfter или shouldRunAfter
+fourth.dependsOn first
+fourth.dependsOn second
+fourth.dependsOn third
+
+
+first.mustRunAfter second
+
+gradle.taskGraph.whenReady {TaskExecutionGraph graph ->
+    println "---- Graph:"
+    graph.allTasks.each {
+        println "${it.name}"
+    }
+}
+
+gradle.taskGraph.beforeTask {Task task ->
+    if(task.group == "dmdev") {
+        println "beforeTask callback $task"
+    }
+}
+
+gradle.taskGraph.afterTask {Task task ->
+    if (task.name == "first") {
+        println "afterTask callback $task"
+    }
+}
+
+defaultTasks "fourth"
+
+ext {
+    javaVersion = 18
+    currentDate = LocalDate.now()
+}
+
+println project.ext.javaVersion
+println ext.javaVersion
+println project.javaVersion
+println javaVersion
+//println project."projectParam1"
+println "---- All properties:"
+println project.properties
+println "----- System:"
+println System.getProperty("sys.example")
