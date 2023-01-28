@@ -1,0 +1,165 @@
+// реальный build.gradle файл в рутовом проекте не должен содержать
+// плагинов, задач, зависимостей, apply from и прочее.
+// только allprojects {}, subprojects {}, wrapper {}
+
+import org.apache.commons.lang3.StringUtils
+// может идти только первой секцией в build.gradle
+// т.к. в нем мы можем настраивать какие-то библиотеки и зависимости,
+// которые потом будут использоваться на всё протяжении build.gradle скрипта
+// используется для конфигурирования Gradle и привносить какие-то зависимости
+// в процесс сборки проекта, который запускается Gradle
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'org.apache.commons:commons-lang3:3.12.0'
+    }
+}
+// перед этой секцией может идти только другая секция plugins{} и buildscript{}
+// apply plugin: 'java' // deprecated!
+plugins {
+    id 'java'
+}
+
+apply from: 'script.gradle'
+//apply plugin: CustomPlugin
+
+// общее поведение для всех проектов, включая рутовый
+// ! Не стоит использовать для чего-то отличного от указанного!
+allprojects {
+    // использование метода здесь стало возможным благодаря зависимости
+    // в секции buildScript{}
+    group StringUtils.capitalize("dmdev")
+    repositories {
+        mavenCentral()
+    }
+}
+
+// для настройки подпроектов относительного текущего
+subprojects {
+    // общее поведение для подпроектов
+}
+
+/*repositories {
+//    ~/.m2/repository
+//    mavenLocal()
+//    maven {
+//        name "nexus dmdev"
+//        url "https://nexus.dmdev/repository"
+//    }
+    mavenCentral()
+}*/
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+configurations {
+    def configurationImpl = getByName("implementation")
+    configurationImpl.getDependencies()
+
+    dmdev {
+        description = "dmdev configuration"
+    }
+    configurationImpl.extendsFrom(dmdev)
+
+    // конфигурирование ВСЕХ Configuration, входящих в ConfigurationContainer
+    all {
+        resolutionStrategy {
+            // через var args можно передать любые зависимости
+//            force('org.springframework:spring-aop:5.3.8')
+            force('org.springframework:spring-aop:6.0.4')
+        }
+    }
+}
+
+dependencies {
+//    add('implementation', [group: "org.springframework", name: "spring-webmvc", version: "5.3.9"])
+//    add('implementation', "org.springframework:spring-webmvc:5.3.9")
+//    implementation "org.springframework:spring-webmvc:5.3.9"
+
+    compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+
+    compileOnly platform('org.springframework.boot:spring-boot-dependencies:3.0.2')
+
+    // configuration являющаяся предком implementation
+//    dmdev "org.springframework:spring-webmvc:5.3.9"
+    // зависимость spring-webmvc не описана в spring-boot-dependencies:3.0.2
+    // поэтому требует указания версии
+    dmdev ("org.springframework:spring-webmvc:6.0.4") {
+//        transitive(false)
+//        exclude(group:"org.springframework", module: "spring-aop")
+    }
+//    implementation "org.springframework:spring-aop:5.3.8"
+    // зависимость spring-webmvc описана в spring-boot-dependencies:3.0.2
+    implementation("org.springframework:spring-aop") {
+//        force(true)
+    }
+}
+
+// эта строчка кода должна быть описана после секции dependencies {}
+// в противном случае описание зависимостей в данной секции будет выбрасывать ошибку
+// Cannot change dependencies of dependency configuration ':dmdev' after it has been included in dependency resolution.
+configurations.runtimeClasspath.files.each {println it}
+
+jar {
+    def jars = configurations.runtimeClasspath.files.collect { "lib/$it.name" }
+    manifest {
+        attributes "Main-Class" : "com.dmdev.HelloWorld",
+                    "Class-Path": jars.join(" ")
+    }
+
+    // FAT JAR
+//    from (configurations.runtimeClasspath.files.collect {zipTree it})
+//    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
+
+task copyAllDependencies(type: Copy) {
+    from (configurations.runtimeClasspath.files)
+    into ("$buildDir/libs/lib")
+}
+
+jar.dependsOn copyAllDependencies
+
+// конфигурируем определенную версию wrapper
+wrapper {
+    gradleVersion = "7.6"
+}
+
+//sourceSets {
+//    main {
+//        java {
+//            srcDir "$buildDir/generated-sources/querydsl"
+//        }
+//    }
+//}
+
+// CustomPlugin можно вынести в отдельную buildSrc директорию
+// Для каждого вынесененного плагина можно указать id, например 'custom'
+// Тогда вместо CustomPlugin для указания полного пути к плагину, используют id:
+// apply plugin: 'custom'
+
+//class CustomPlugin implements Plugin<Project> {
+//    @Override
+//    void apply(Project project) {
+//        def map = [description: "Hello task", group: "dmdev", type: DefaultTask]
+//        project.task(map, "customHello") {
+//            println "configuration phase. Task customHello."
+//            doLast {
+//                println "execution phase, Action 1"
+//            }
+//            doFirst {
+//                println "execution phase, Action 2"
+//            }
+//            doLast {
+//                println "execution phase, Action 3"
+//            }
+//
+//            println "task: $description, group: $group, actions: ${actions.size()}"
+//            println "path task: $path"
+//        }
+//    }
+//}
