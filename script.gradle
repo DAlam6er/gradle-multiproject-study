@@ -54,45 +54,45 @@ println "root: ${rootProject.hashCode()}, ${project.hashCode()}, ${gradle.rootPr
 
 // или то же самое, но более лаконично
 task hello(description: "Hello task", group: "dmdev", type: DefaultTask) {
-    println "configuration phase. Task hello."
+  println "configuration phase. Task hello."
 
-    // Actions
-    doLast {
-        println "execution phase, Action 1"
-    }
-    doFirst {
-        println "execution phase, Action 2"
-    }
-    doLast {
-        println "execution phase, Action 3"
-    }
+  // Actions
+  doLast {
+    println "execution phase, Action 1"
+  }
+  doFirst {
+    println "execution phase, Action 2"
+  }
+  doLast {
+    println "execution phase, Action 3"
+  }
 
-    println "task: $description, group: $group, actions: ${actions.size()}"
-    println "path task: $path"
+  println "task: $description, group: $group, actions: ${actions.size()}"
+  println "path task: $path"
 }
 
 task first {
-    doLast {
-        println "Task 1"
-    }
+  doLast {
+    println "Task 1"
+  }
 }
 
 task second {
-    doLast {
-        println "Task 2"
-    }
+  doLast {
+    println "Task 2"
+  }
 }
 
 task third {
-    doLast {
-        println "Task 3"
-    }
+  doLast {
+    println "Task 3"
+  }
 }
 
 task fourth(group: "dmdev") {
-    doLast {
-        println "Task 4"
-    }
+  doLast {
+    println "Task 4"
+  }
 }
 
 // 2 ---> 4
@@ -102,45 +102,49 @@ task fourth(group: "dmdev") {
 //second.dependsOn first
 //second.finalizedBy third
 
-// Если задачи независимые друг от друга, то порядок вызова не гарантируется
-// для задания порядка независимых задач используются mustRunAfter или shouldRunAfter
 fourth.dependsOn first
 fourth.dependsOn second
 fourth.dependsOn third
+//fourth.dependsOn(second, third, first)
 
-
+// Если задачи независимые друг от друга, то порядок вызова не гарантируется
+// для задания порядка независимых задач используются mustRunAfter или shouldRunAfter
 first.mustRunAfter second
 
-gradle.taskGraph.whenReady {TaskExecutionGraph graph ->
-    println "---- Graph:"
-    graph.allTasks.each {
-        println "${it.name}"
-    }
+// Callbacks:
+gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
+  println "---- Graph:"
+  graph.allTasks.each {
+    println "${it.name}"
+  }
 }
 
-gradle.taskGraph.beforeTask {Task task ->
-    if(task.group == "dmdev") {
-        println "beforeTask callback $task"
-    }
+gradle.taskGraph.beforeTask { Task task ->
+  if (task.group == "dmdev") {
+    println "beforeTask callback $task"
+  }
 }
 
-gradle.taskGraph.afterTask {Task task ->
-    if (task.name == "first") {
-        println "afterTask callback $task"
-    }
+gradle.taskGraph.afterTask { Task task ->
+  if (task.name == "first") {
+    println "afterTask callback $task"
+  }
 }
 
 defaultTasks "fourth"
 
+// == Gradle properties ==
+// Extension block (Map<String, Object>)
 ext {
-    javaVersion = 18
-    currentDate = LocalDate.now()
+  javaVersion = 23
+  currentDate = LocalDate.now()
 }
 
 println project.ext.javaVersion
 println ext.javaVersion
 println project.javaVersion
 println javaVersion
+// $: gradle first -Dsys.example=sysValue1 -PprojectParam1=projectValue
 //println project."projectParam1"
 println "---- All properties:"
 println project.properties

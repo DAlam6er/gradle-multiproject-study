@@ -1,5 +1,4 @@
 package com.dmdev;
 
-public class HelloWorldTest
-{
+public class HelloWorldTest {
 }
