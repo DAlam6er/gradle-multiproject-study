@@ -1,0 +1,14 @@
+[versions]
+junit-jupiter = "5.11.3"
+commons-lang3 = "3.17.0"
+jakarta-servlet = "6.0.0"
+
+[libraries]
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-jupiter" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter" }
+commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
+jakarta-servlet = { module = "jakarta.servlet:jakarta.servlet-api", version.ref = "jakarta-servlet" }
+
+[bundles]
+
+[plugins]

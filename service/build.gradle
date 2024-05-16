@@ -1,9 +1,9 @@
 import com.dmdev.task.ReleaseTask
 
 plugins {
-    id 'java'
-    id 'jacoco'
-    id 'custom-dmdev'
+  id 'java'
+  id 'jacoco'
+  id 'custom-dmdev'
 }
 
 //apply plugin: com.dmdev.plugin.CustomPlugin
@@ -12,25 +12,29 @@ group 'org.example'
 version '1.0.0-SNAPSHOT'
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    implementation project(":database")
+  implementation project(":database")
+  // не добавляются транзитивные зависимости проекта database в service, и это хорошо
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
+  // test
+  testImplementation libs.junit.jupiter.api
+  testRuntimeOnly libs.junit.jupiter.engine
 }
 
 test {
-    useJUnitPlatform()
+  // maxParallelForks 3 // позволяет выполнять тесты в несколько потоков
+  useJUnitPlatform()
 }
 
 test.finalizedBy jacocoTestReport
+jacocoTestReport.dependsOn test
 
 // добавляем property release
 ext {
-    release = true
+  release = true
 }
 
 // задача, наследующая DefaultTask
@@ -47,9 +51,9 @@ ext {
 //    }
 //}
 
-task makeRelease(type: ReleaseTask) {
-    // инициализация полей класса
-    release = project.release
-    releaseFile = new File("$rootDir/script.gradle")
+tasks.register('makeRelease', ReleaseTask) {
+  // инициализация полей класса
+  release = project.release
+  releaseFile = new File("$rootDir/script.gradle")
 }
 

@@ -1,34 +1,41 @@
 plugins {
-    id 'java'
-    id 'war'
+  id 'java'
+  id 'war'
 }
 
 //group 'org.example'
 //version 'unspecified'
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    implementation project(":service")
-    implementation project(":common:util")
-    compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+  implementation project(":service")
+  implementation project(":common:util")
+
+  compileOnly libs.jakarta.servlet
+
+  // test
+  testImplementation libs.junit.jupiter.api
+  testRuntimeOnly libs.junit.jupiter.engine
 }
 
 test {
-    useJUnitPlatform()
+  useJUnitPlatform()
+}
+
+ext {
+  tomcatVersion = '10.1.33'
 }
 
 war {
-    archiveFileName = "dmdev.war"
+  archiveFileName = "dmdev.war"
 }
 
-task deployTomcat(type: Copy) {
-    from (war.archiveFile.get())
-    into("C:\\Program Files\\Apache Software Foundation\\Tomcat 10.0\\webapps")
+tasks.register('deployTomcat', Copy) {
+  from(war.archiveFile.get())
+  into("$gradle.gradleUserHomeDir/../apache-tomcat-$tomcatVersion/webapps")
 }
 
 deployTomcat.dependsOn war

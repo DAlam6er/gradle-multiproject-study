@@ -1,21 +1,25 @@
 plugins {
-    id 'java-library'
+  id 'java-library' // нужен для использования configuration "api"
 }
 
 //group 'org.example'
 //version 'unspecified'
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-//    implementation project(":common:core")
-    api project(":common:core")
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+//  implementation project(":common:core")
+
+  // для того, чтобы проект core достался как транзитивная зависимость другим проектам, которые подключают database
+  api project(":common:core")
+
+  // test
+  testImplementation libs.junit.jupiter.api
+  testRuntimeOnly libs.junit.jupiter.engine
 }
 
 test {
-    useJUnitPlatform()
+  useJUnitPlatform()
 }

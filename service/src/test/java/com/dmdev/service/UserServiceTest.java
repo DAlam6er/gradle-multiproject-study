@@ -7,13 +7,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class UserServiceTest
-{
+public class UserServiceTest {
     private final UserService userService = UserService.getInstance();
 
     @Test
-    void getAll()
-    {
+    void getAll() {
         List<UserDto> actual = userService.getAll();
         assertEquals(3, actual.size());
     }

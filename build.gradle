@@ -3,43 +3,50 @@
 // только allprojects {}, subprojects {}, wrapper {}
 
 import org.apache.commons.lang3.StringUtils
+
 // может идти только первой секцией в build.gradle
 // т.к. в нем мы можем настраивать какие-то библиотеки и зависимости,
 // которые потом будут использоваться на всё протяжении build.gradle скрипта
 // используется для конфигурирования Gradle и привносить какие-то зависимости
 // в процесс сборки проекта, который запускается Gradle
 buildscript {
-    repositories {
-        mavenCentral()
-    }
+  // указываем в buildScript, чтобы gradle знал, откуда выкачивать зависимости
+  repositories {
+    mavenCentral()
+  }
 
-    dependencies {
-        classpath 'org.apache.commons:commons-lang3:3.12.0'
-    }
+  dependencies {
+    // эта зависимость будет доступна во всех build.gradle скриптах
+    classpath libs.commons.lang3 // другие configurations нам пока недоступны - их привносит java plugin (см. ниже)
+    // так делают не очень часто, чаще всего создают свои плагины и указывать там свои зависимости
+    // можно например подключить SNAPSHOT-версию плагина, и далее в plugins подключить её
+  }
 }
+
 // перед этой секцией может идти только другая секция plugins{} и buildscript{}
 // apply plugin: 'java' // deprecated!
 plugins {
-    id 'java'
+  id 'java'
 }
 
+// Используем содержимое скрипта в конфигурации проекта
 apply from: 'script.gradle'
 //apply plugin: CustomPlugin
 
 // общее поведение для всех проектов, включая рутовый
 // ! Не стоит использовать для чего-то отличного от указанного!
 allprojects {
-    // использование метода здесь стало возможным благодаря зависимости
-    // в секции buildScript{}
-    group StringUtils.capitalize("dmdev")
-    repositories {
-        mavenCentral()
-    }
+  // использование метода здесь стало возможным благодаря зависимости
+  // в секции buildScript{}
+  group StringUtils.capitalize("dmdev")
+  repositories {
+    mavenCentral()
+  }
 }
 
-// для настройки подпроектов относительного текущего
+// для настройки подпроектов относительного текущего (в данном случае относительно рутового, т.е. для всех подпроектов)
 subprojects {
-    // общее поведение для подпроектов
+  // общее поведение для подпроектов
 }
 
 /*repositories {
@@ -53,27 +60,27 @@ subprojects {
 }*/
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+  sourceCompatibility = JavaVersion.VERSION_23
+  targetCompatibility = JavaVersion.VERSION_23
 }
 
 configurations {
-    def configurationImpl = getByName("implementation")
-    configurationImpl.getDependencies()
+  def configurationImpl = getByName("implementation")
+  configurationImpl.getDependencies()
 
-    dmdev {
-        description = "dmdev configuration"
-    }
-    configurationImpl.extendsFrom(dmdev)
+  dmdev {
+    description = "dmdev configuration"
+  }
+  configurationImpl.extendsFrom(dmdev)
 
-    // конфигурирование ВСЕХ Configuration, входящих в ConfigurationContainer
-    all {
-        resolutionStrategy {
-            // через var args можно передать любые зависимости
+  // конфигурирование ВСЕХ Configuration, входящих в ConfigurationContainer
+  all {
+    resolutionStrategy {
+      // через var args можно передать любые зависимости
 //            force('org.springframework:spring-aop:5.3.8')
-            force('org.springframework:spring-aop:6.0.4')
-        }
+      force('org.springframework:spring-aop:6.0.19')
     }
+  }
 }
 
 dependencies {
@@ -81,85 +88,86 @@ dependencies {
 //    add('implementation', "org.springframework:spring-webmvc:5.3.9")
 //    implementation "org.springframework:spring-webmvc:5.3.9"
 
-    compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
+  compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
 
-    compileOnly platform('org.springframework.boot:spring-boot-dependencies:3.0.2')
+  compileOnly platform('org.springframework.boot:spring-boot-dependencies:3.2.5')
 
-    // configuration являющаяся предком implementation
+  // configuration являющаяся предком implementation
 //    dmdev "org.springframework:spring-webmvc:5.3.9"
-    // зависимость spring-webmvc не описана в spring-boot-dependencies:3.0.2
-    // поэтому требует указания версии
-    dmdev ("org.springframework:spring-webmvc:6.0.4") {
+  // зависимость spring-webmvc не описана в spring-boot-dependencies:3.0.2
+  // поэтому требует указания версии
+  dmdev("org.springframework:spring-webmvc:6.0.19") {
 //        transitive(false)
 //        exclude(group:"org.springframework", module: "spring-aop")
-    }
+  }
 //    implementation "org.springframework:spring-aop:5.3.8"
-    // зависимость spring-webmvc описана в spring-boot-dependencies:3.0.2
-    implementation("org.springframework:spring-aop") {
+  // зависимость spring-webmvc описана в spring-boot-dependencies:3.0.2
+  implementation("org.springframework:spring-aop") {
 //        force(true)
-    }
+  }
 }
 
 // эта строчка кода должна быть описана после секции dependencies {}
 // в противном случае описание зависимостей в данной секции будет выбрасывать ошибку
 // Cannot change dependencies of dependency configuration ':dmdev' after it has been included in dependency resolution.
-configurations.runtimeClasspath.files.each {println it}
+configurations.runtimeClasspath.files.each { println it }
 
 jar {
-    def jars = configurations.runtimeClasspath.files.collect { "lib/$it.name" }
-    manifest {
-        attributes "Main-Class" : "com.dmdev.HelloWorld",
-                    "Class-Path": jars.join(" ")
-    }
+  def jars = configurations.runtimeClasspath.files.collect { "lib/$it.name" }
+  manifest {
+    attributes "Main-Class": "com.dmdev.HelloWorld",
+        "Class-Path": jars.join(" ")
+  }
 
-    // FAT JAR
+  // FAT JAR
 //    from (configurations.runtimeClasspath.files.collect {zipTree it})
 //    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
 }
 
-task copyAllDependencies(type: Copy) {
-    from (configurations.runtimeClasspath.files)
-    into ("$buildDir/libs/lib")
+tasks.register('copyAllDependencies', Copy) {
+  from(configurations.runtimeClasspath.files)
+  into(layout.buildDirectory.dir("/libs/lib"))
 }
 
 jar.dependsOn copyAllDependencies
 
 // конфигурируем определенную версию wrapper
 wrapper {
-    gradleVersion = "7.6"
+  gradleVersion = "8.11"
+  distributionType = Wrapper.DistributionType.ALL
 }
 
-//sourceSets {
-//    main {
-//        java {
-//            srcDir "$buildDir/generated-sources/querydsl"
-//        }
-//    }
-//}
+/*sourceSets {
+    main {
+        java {
+            srcDir layout.buildDirectory.dir("/generated-sources/querydsl")
+        }
+    }
+}*/
 
-// CustomPlugin можно вынести в отдельную buildSrc директорию
-// Для каждого вынесененного плагина можно указать id, например 'custom'
-// Тогда вместо CustomPlugin для указания полного пути к плагину, используют id:
-// apply plugin: 'custom'
+/* CustomPlugin можно вынести в отдельную buildSrc директорию
+ Для каждого вынесенного плагина можно указать id, например 'custom'
+ Тогда вместо CustomPlugin для указания полного пути к плагину, используют id:
+ apply plugin: 'custom'*/
 
-//class CustomPlugin implements Plugin<Project> {
-//    @Override
-//    void apply(Project project) {
-//        def map = [description: "Hello task", group: "dmdev", type: DefaultTask]
-//        project.task(map, "customHello") {
-//            println "configuration phase. Task customHello."
-//            doLast {
-//                println "execution phase, Action 1"
-//            }
-//            doFirst {
-//                println "execution phase, Action 2"
-//            }
-//            doLast {
-//                println "execution phase, Action 3"
-//            }
-//
-//            println "task: $description, group: $group, actions: ${actions.size()}"
-//            println "path task: $path"
-//        }
-//    }
-//}
+/*class CustomPlugin implements Plugin<Project> {
+    @Override
+    void apply(Project project) {
+        def map = [description: "Hello task", group: "dmdev", type: DefaultTask]
+        project.task(map, "customHello") {
+            println "configuration phase. Task customHello."
+            doLast {
+                println "execution phase, Action 1"
+            }
+            doFirst {
+                println "execution phase, Action 2"
+            }
+            doLast {
+                println "execution phase, Action 3"
+            }
+
+            println "task: $description, group: $group, actions: ${actions.size()}"
+            println "path task: $path"
+        }
+    }
+}*/
