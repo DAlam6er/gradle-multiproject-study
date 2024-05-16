@@ -133,7 +133,7 @@ gradle.taskGraph.afterTask {Task task ->
 defaultTasks "fourth"
 
 ext {
-    javaVersion = 18
+    javaVersion = 21
     currentDate = LocalDate.now()
 }
 

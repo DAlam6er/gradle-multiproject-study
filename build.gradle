@@ -14,7 +14,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'org.apache.commons:commons-lang3:3.12.0'
+        classpath 'org.apache.commons:commons-lang3:3.14.0'
     }
 }
 // перед этой секцией может идти только другая секция plugins{} и buildscript{}
@@ -53,8 +53,8 @@ subprojects {
 }*/
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 configurations {
@@ -71,7 +71,7 @@ configurations {
         resolutionStrategy {
             // через var args можно передать любые зависимости
 //            force('org.springframework:spring-aop:5.3.8')
-            force('org.springframework:spring-aop:6.0.4')
+            force('org.springframework:spring-aop:6.0.19')
         }
     }
 }
@@ -83,13 +83,13 @@ dependencies {
 
     compileOnly 'jakarta.servlet:jakarta.servlet-api:6.0.0'
 
-    compileOnly platform('org.springframework.boot:spring-boot-dependencies:3.0.2')
+    compileOnly platform('org.springframework.boot:spring-boot-dependencies:3.2.5')
 
     // configuration являющаяся предком implementation
 //    dmdev "org.springframework:spring-webmvc:5.3.9"
     // зависимость spring-webmvc не описана в spring-boot-dependencies:3.0.2
     // поэтому требует указания версии
-    dmdev ("org.springframework:spring-webmvc:6.0.4") {
+    dmdev ("org.springframework:spring-webmvc:6.0.19") {
 //        transitive(false)
 //        exclude(group:"org.springframework", module: "spring-aop")
     }
@@ -126,7 +126,7 @@ jar.dependsOn copyAllDependencies
 
 // конфигурируем определенную версию wrapper
 wrapper {
-    gradleVersion = "7.6"
+    gradleVersion = "8.7"
 }
 
 //sourceSets {
